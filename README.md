@@ -1,1 +1,1 @@
-# assessment-service
+# lms-assessment-service

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: mongo-assessment, namespace: lms}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: mongo-assessment}}
+  template:
+    metadata: {labels: {app: mongo-assessment}}
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:6
+        ports: [{containerPort: 27017}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: mongo-assessment, namespace: lms}
+spec:
+  selector: {app: mongo-assessment}
+  ports: [{port: 27017}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: assessment-service, namespace: lms}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: assessment-service}}
+  template:
+    metadata: {labels: {app: assessment-service}}
+    spec:
+      containers:
+      - name: assessment
+        image: assessment-service:1.0
+        imagePullPolicy: Never
+        ports: [{containerPort: 3000}]
+        env:
+        - {name: MONGO_URL, value: "mongodb://mongo-assessment:27017"}
+        - {name: CATALOG_URL, value: "http://catalog-service:5000"}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: assessment-service, namespace: lms}
+spec:
+  selector: {app: assessment-service}
+  ports: [{port: 3000, targetPort: 3000}]
